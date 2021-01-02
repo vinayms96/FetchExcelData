@@ -4,10 +4,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.NumberToTextConverter;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -18,7 +20,8 @@ public class ExcelUtils implements Constants {
     private static XSSFSheet sheet;
     private static Row row;
     private static Cell cell;
-    private static ArrayList<String> rowData = new ArrayList<>();
+    private static ArrayList<String> rowListData = new ArrayList<>();
+    private static HashMap<String, String> rowMapData = new HashMap<>();
 
     /**
      * Setting up the workbook through the path
@@ -32,10 +35,10 @@ public class ExcelUtils implements Constants {
     }
 
     /**
-     * Fetch the data from excel by passing sheetname &
+     * Fetch the data from excel by passing sheetName &
      * adding the particular row data in ArrayList
-     * @param sheetName
-     * @param dataName
+     * @param sheetName - Sheet name to pick
+     * @param dataName - Row name to pick
      * @return ArrayList<String>
      */
     public static ArrayList<String> getDataByList(String sheetName, String dataName) {
@@ -53,22 +56,42 @@ public class ExcelUtils implements Constants {
                         while (cellIterator.hasNext()) {
                             cell = cellIterator.next();
                             if (row.getCell(cell.getColumnIndex()).getCellType().equals(CellType.STRING)) {
-                                rowData.add(row.getCell(cell.getColumnIndex()).getStringCellValue());
+                                rowListData.add(row.getCell(cell.getColumnIndex()).getStringCellValue());
                             } else {
-                                rowData.add(NumberToTextConverter.toText(row.getCell(cell
+                                rowListData.add(NumberToTextConverter.toText(row.getCell(cell
                                         .getColumnIndex()).getNumericCellValue()));
                             }
                         }
                     }
                 }
-                return rowData;
+                return rowListData;
             }
         }
         return null;
     }
 
-    public static void getDataByMap(String sheetName) {
-        
+    /**
+     * Fetch the data from Excel and add it to HashMap with the Column Name
+     * and return Map data
+     * @param sheetName
+     * @param rowNum
+     * @return HashMap<String, String>
+     */
+    public static HashMap<String, String> getDataByMap(String sheetName, int rowNum) {
+        sheet = workbook.getSheet(sheetName);
+
+        int cell_count = sheet.getRow(0).getLastCellNum();
+        for(int cells = 0; cells < cell_count; cells++) {
+            XSSFCell cell_data = sheet.getRow(rowNum).getCell(cells);
+            if(cell_data.getCellType().equals(CellType.STRING)) {
+                rowMapData.put(sheet.getRow(0).getCell(cells).getStringCellValue(),
+                        cell_data.getStringCellValue());
+            } else {
+                rowMapData.put(sheet.getRow(0).getCell(cells).getStringCellValue(),
+                        NumberToTextConverter.toText(cell_data.getNumericCellValue()));
+            }
+        }
+        return rowMapData;
     }
 
     /**
@@ -92,10 +115,18 @@ public class ExcelUtils implements Constants {
     }
 
     /**
-     * Return the row data fetched from excel
+     * Return the row data fetched from excel as List Data
      * @return ArrayList<String>
      */
-    public static ArrayList<String> getDataArray() {
-        return rowData;
+    public static ArrayList<String> getRowListData() {
+        return rowListData;
+    }
+
+    /**
+     * Return the row data fetched from excel as Map Data
+     * @return HashMap<String, String>
+     */
+    public static HashMap<String, String> getRowMapData() {
+        return rowMapData;
     }
 }
